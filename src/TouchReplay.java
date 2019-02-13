@@ -91,7 +91,7 @@ public class TouchReplay extends Application {
 	  for (int i=0; i<tries; i++) {
 		  bot.mouseMove(e.getXOnScreen(), e.getYOnScreen());
 		  if(p.equals(MouseInfo.getPointerInfo().getLocation()) ) {
-			  System.out.println(p.toString() + " same as " + MouseInfo.getPointerInfo().getLocation().toString());
+//			  System.out.println(p.toString() + " same as " + MouseInfo.getPointerInfo().getLocation().toString());
 			  break;
 		  }
 	  }	  
@@ -181,7 +181,7 @@ public class TouchReplay extends Application {
     	    	try {
     				click(e.getXOnScreen(), e.getYOnScreen());
     				Window w = (Window) e.getSource();	 
-    				System.out.println("Mouse pressed: " + e.getXOnScreen() + ", " + e.getYOnScreen());//these need to be stored and then replayed
+//    				System.out.println("Mouse pressed: " + e.getXOnScreen() + ", " + e.getYOnScreen());//these need to be stored and then replayed
     				mouseArray.add(e);
     			} catch (AWTException e1) {
     				// TODO Auto-generated catch block
