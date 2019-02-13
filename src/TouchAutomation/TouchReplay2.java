@@ -1,3 +1,5 @@
+package TouchAutomation;
+
 import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -46,11 +48,11 @@ import me.coley.simplejna.hook.mouse.struct.MouseButtonType;
  ** Click anywhere
  ** Press Alt + Left Click to replay
  ** Press Shift + Left Click to finish
- ** Press Ctrl + Left Click to 
+ ** Press Ctrl + Left Click to save
  * 
  */
 
-public class TouchReplay extends Application {
+public class TouchReplay2 extends Application {
   private int screenWidth = 1920;
   private int screenHeight = 1080;
   private int clickIntervalInSeconds = 1;
@@ -150,8 +152,8 @@ public class TouchReplay extends Application {
         public void mousePressed(MouseEvent e) {
         	Coordinate coordinate = new Coordinate(e.getXOnScreen(), e.getYOnScreen());
         	coordinateArray.add(coordinate);
-        	//Alt + Right Click = Replay
-        	if(e.isAltDown()) {				
+        	//Alt + Shift + Right Click = Replay
+        	if(e.isAltDown() && e.isShiftDown()) {				
     			for(int i=0; i<mouseArray.size(); i=i+2) {
     				try {
     					setTransparent(w);
@@ -162,18 +164,28 @@ public class TouchReplay extends Application {
 						e1.printStackTrace();
 					}
     			}	
+        	}
+			else if(e.isAltDown()) {
+				
+			}
     		//Shift + Right Click = Close
-    		}else if(e.isShiftDown()) {
+    		else if(e.isShiftDown()) {
     			System.out.println("Coordinates");
-    			for (int i=0; i<coordinateArray.size(); i++) {
+    			for (int i=0; i<coordinateArray.size(); i=i+2) {
     				coordinateArray.get(i).printCoordinate();
-    			}
+    			}    
+
     			coordinateArray.clear();
     			w.dispose();
     			System.exit(0);
-    		//Ctrl + Right Click = Clear memory 
+    		//Ctrl + Right Click = Save 
     		}else if(e.isControlDown()) {
-    			mouseArray.clear();		
+    			try {
+					JSONWrapper.writeMouseEventsToJSON(coordinateArray);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}	
     			e.consume();
     		}		
         	else {     
@@ -181,7 +193,6 @@ public class TouchReplay extends Application {
     	    	try {
     				click(e.getXOnScreen(), e.getYOnScreen());
     				Window w = (Window) e.getSource();	 
-//    				System.out.println("Mouse pressed: " + e.getXOnScreen() + ", " + e.getYOnScreen());//these need to be stored and then replayed
     				mouseArray.add(e);
     			} catch (AWTException e1) {
     				// TODO Auto-generated catch block
@@ -207,30 +218,4 @@ public class TouchReplay extends Application {
     w.setAlwaysOnTop(true);    
     getOriginalWindowProperties(w);    
   }
-
-}
-
-class Coordinate{
-	int x;
-	int y;
-	public Coordinate(int newX, int newY) {
-		setX(newX);
-		setY(newY);
-	}
-	
-	public int getX() {
-		return x;
-	}
-	public void setX(int newX) {
-		x = newX;
-	}
-	public int getY() {
-		return y;
-	}
-	public void setY(int newY) {
-		y = newY; 
-	}
-	public void printCoordinate() {
-		System.out.println("Coordinate: " + getX() + ", " + getY());
-	}
 }
