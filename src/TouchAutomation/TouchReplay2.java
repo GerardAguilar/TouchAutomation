@@ -16,10 +16,13 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
+import org.json.simple.JSONObject;
 
 import com.sun.awt.AWTUtilities;
 import com.sun.jna.Native;
@@ -98,6 +101,9 @@ public class TouchReplay2 extends Application {
 		  }
 	  }	  
   }
+  public void click(Coordinate coordinate) throws AWTException {
+	  click(coordinate.getX(), coordinate.getY());
+  }
   
   public void click(int xCoordinate, int yCoordinate) throws AWTException {
 	  Robot bot = new Robot();
@@ -146,7 +152,7 @@ public class TouchReplay2 extends Application {
             return new Dimension(screenWidth, screenHeight);
         }
     };   
-    
+        
     MouseAdapter mouseAdapter = new MouseAdapter() { 	    	
         @Override
         public void mousePressed(MouseEvent e) {
@@ -165,8 +171,20 @@ public class TouchReplay2 extends Application {
 					}
     			}	
         	}
+        	//Alt + Right Click = Replay with Json
 			else if(e.isAltDown()) {
-				
+				ArrayList<Coordinate> coordinates = JSONWrapper.getCoordinates();
+				for(int i=0; i<coordinates.size(); i++) {					
+					try {
+						setTransparent(w);
+						click(coordinates.get(i));
+						setOpaque(w);
+					} catch (AWTException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					
+				}
 			}
     		//Shift + Right Click = Close
     		else if(e.isShiftDown()) {
@@ -174,14 +192,14 @@ public class TouchReplay2 extends Application {
     			for (int i=0; i<coordinateArray.size(); i=i+2) {
     				coordinateArray.get(i).printCoordinate();
     			}    
-
     			coordinateArray.clear();
     			w.dispose();
     			System.exit(0);
     		//Ctrl + Right Click = Save 
     		}else if(e.isControlDown()) {
     			try {
-					JSONWrapper.writeMouseEventsToJSON(coordinateArray);
+//					JSONWrapper.writeMouseEventsToJSON(coordinateArray);
+    				JSONWrapper.writeInteractionEvents(coordinateArray);			
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
