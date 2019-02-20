@@ -21,6 +21,13 @@ public class Coordinate{
 		recordTimestamp(time);
 	}
 	
+	public Coordinate(int newX, int newY, Timestamp time, long diff) {
+		setX(newX);
+		setY(newY);
+		recordTimestamp(time);
+		setTimeDiff(diff);
+	}
+	
 	public int getX() {
 		return x;
 	}

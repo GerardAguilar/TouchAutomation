@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -104,6 +105,8 @@ public class JSONSimpleWrapper {
 		Object obj;
 		int x;
 		int y;
+		long timeDiff;
+		Timestamp timestamp;
 		try {
 			obj = parser.parse(new FileReader(filename));
 			JSONArray jsonArray = (JSONArray)obj;
@@ -114,7 +117,10 @@ public class JSONSimpleWrapper {
 					JSONObject interactionObject = (JSONObject)jsonObject.get("interaction");
 					x = Integer.parseInt(interactionObject.get("x").toString());
 					y = Integer.parseInt(interactionObject.get("y").toString());
-					coordinates.add(new Coordinate(x,y));
+					timeDiff = Long.parseLong(interactionObject.get("timeDiff").toString());
+					timestamp = new Timestamp(Long.parseLong(interactionObject.get("timestamp").toString()));
+					coordinates.add(new Coordinate(x,y,timestamp,timeDiff));
+					
 				}
 			}
 		} catch (IOException | ParseException e) {

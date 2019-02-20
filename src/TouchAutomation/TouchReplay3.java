@@ -36,7 +36,10 @@ import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.POINT;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -44,6 +47,7 @@ import javafx.scene.Scene;
 import javafx.scene.input.TouchEvent;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import me.coley.simplejna.hook.mouse.MouseEventReceiver;
 //from w w w .  j a  va  2s  .  c  o m
 import me.coley.simplejna.hook.mouse.MouseHookManager;
@@ -96,17 +100,17 @@ public class TouchReplay3 extends Application {
   public void click(int xCoordinate, int yCoordinate, long timeDiff) throws AWTException, InterruptedException {
 	  Robot bot = new Robot();
 //	  bot.wait(timeDiff);
-//	  Thread.currentThread().sleep(timeDiff*1000);
+	  Thread.currentThread().sleep(timeDiff);
 //	  wait(timeDiff);
-	  move(xCoordinate, yCoordinate, timeDiff);
+	  move(xCoordinate, yCoordinate);
 	  bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
 	  bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
   }
   public void move(Coordinate coordinate) throws AWTException, InterruptedException{
-	  move(coordinate.getX(), coordinate.getY(), coordinate.getTimeDifference(null));
+	  move(coordinate.getX(), coordinate.getY());
   }
   
-  public void move(int x, int y, long millis) throws AWTException, InterruptedException {
+  public void move(int x, int y) throws AWTException, InterruptedException {
 	  Robot bot = new Robot();
 	  int tries = 200;
 	  Point p = new Point(x,y);
@@ -117,7 +121,6 @@ public class TouchReplay3 extends Application {
 			  break;
 		  }
 	  }	  
-//	  Thread.sleep(millis);
   }  
   
   public void release() throws AWTException{
@@ -162,7 +165,7 @@ public class TouchReplay3 extends Application {
 		  current.setTimeDiff(diff);
 	  }
   }
-
+  
   @Override
   public void start(Stage primaryStage) {
 	  
@@ -181,21 +184,30 @@ public class TouchReplay3 extends Application {
         public void mousePressed(MouseEvent e) {
     		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         	int count = e.getClickCount();
-        	System.out.println("clickCount: " + count);
+//        	System.out.println("clickCount: " + count);
         	//Alt + Right Click = Replay with Json
 			if(e.isAltDown() && flip) {
 				flip=!flip;
+				System.out.println(Thread.currentThread().toString());
+
 				ArrayList<Coordinate> coordinates = JSONSimpleWrapper.getCoordinates();
 				for(int i=0; i<coordinates.size(); i=i+1) {		
+					long delay = coordinates.get(i).getTimeDiff();
+
+					//responsible for timing
 					try {
-						Thread.currentThread().sleep(coordinates.get(i).getTimeDiff()*100);
+						Thread.currentThread();
+						Thread.sleep(delay);
 					} catch (InterruptedException e2) {
 						// TODO Auto-generated catch block
 						e2.printStackTrace();
 					}
+					
 					try {
 						setTransparent(w);
+//						sleep();
 						click(coordinates.get(i));
+						
 						System.out.println(i);
 						release();						
 					} catch (AWTException | InterruptedException e1) {
