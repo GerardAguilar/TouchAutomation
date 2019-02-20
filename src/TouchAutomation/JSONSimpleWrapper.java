@@ -17,7 +17,7 @@ import org.json.simple.parser.ParseException;
 
 
 //modified from https://howtodoinjava.com/json/json-simple-read-write-json-examples/
-public class JSONWrapper {	
+public class JSONSimpleWrapper {	
 	private static String filename = "MouseEvents.json";
 	public static void writeMouseEventsToJSON(ArrayList<Coordinate> array) throws Exception {  
 //		JSONObject sampleObject = new JSONObject();	
@@ -37,7 +37,7 @@ public class JSONWrapper {
 	
 	public static void writeInteractionEvents(ArrayList<Coordinate> array) throws Exception{
 		/**
-		 * "interactions":[
+		 * [
 		 * 	{
 		 * 		"InteractionEvent": {
 		 * 			"id" : "1"
@@ -70,7 +70,8 @@ public class JSONWrapper {
 			interactionDetails.put("type", "mouse_leftclick");
 			interactionDetails.put("x", array.get(i).getX()+"");
 			interactionDetails.put("y", array.get(i).getY()+"");
-			interactionDetails.put("timestamp", "123456789");
+			interactionDetails.put("timestamp", array.get(i).getTimestamp().getTime());
+			interactionDetails.put("timeDiff", array.get(i).getTimeDiff());
 			interactionObject.put("interaction", interactionDetails);
 			interactionEvents.add(interactionObject);
 		}		
@@ -83,39 +84,43 @@ public class JSONWrapper {
 		Object obj = parser.parse(new FileReader(filename));
 		
 		JSONArray jsonArray = (JSONArray)obj;
-		System.out.println("size: " + jsonArray.size() +" | " +jsonArray);		
+		System.out.println("size: " + jsonArray.size() +" | " +jsonArray);			
 		
-		
-		
-		 //Iterate over employee array
+		 //Iterate over array
 //		jsonArray.forEach( interaction -> parseInteractionObject( (JSONObject) interaction ) );
+		for(Object o: jsonArray) {
+			if(o instanceof JSONObject) {
+				System.out.println(((JSONObject)o).toString());
+			}
+		}
+
 	}
 	
 	//need to iterate through JSONArray
+	
 	public static ArrayList<Coordinate> getCoordinates(){
 		ArrayList<Coordinate> coordinates = new ArrayList<Coordinate>();
 		JSONParser parser = new JSONParser();
 		Object obj;
+		int x;
+		int y;
 		try {
 			obj = parser.parse(new FileReader(filename));
 			JSONArray jsonArray = (JSONArray)obj;
-			JSONObject jsonObject;
-			int x;
-			int y;
 			
-			for(int i=0; i<jsonArray.size(); i++) {
-				jsonObject = new JSONObject();
-				jsonObject = (JSONObject) jsonArray.get(i);
-				x = Integer.parseInt(jsonObject.get("x").toString());
-				y = Integer.parseInt(jsonObject.get("y").toString());
-				coordinates.add(new Coordinate(x,y));
+			for(Object o: jsonArray) {
+				if(o instanceof JSONObject) {
+					JSONObject jsonObject = (JSONObject)o;
+					JSONObject interactionObject = (JSONObject)jsonObject.get("interaction");
+					x = Integer.parseInt(interactionObject.get("x").toString());
+					y = Integer.parseInt(interactionObject.get("y").toString());
+					coordinates.add(new Coordinate(x,y));
+				}
 			}
 		} catch (IOException | ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		
 		return coordinates;
 	}
 	

@@ -11,10 +11,14 @@ import java.awt.Point;
 import java.awt.Robot;
 import java.awt.Window;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.sql.Timestamp;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,22 +51,18 @@ import me.coley.simplejna.hook.mouse.struct.MouseButtonType;
 
 /**
  * @author gaguilar
- * Very basic click recorder (1 second between clicks)
- ** Click anywhere
- ** Press Alt + Left Click to replay
- ** Press Shift + Left Click to finish
- ** Press Ctrl + Left Click to save
- * 
  */
 
-public class TouchReplay2 extends Application {
+public class TouchReplay3 extends Application {
   private int screenWidth = 1920;
   private int screenHeight = 1080;
-  private int clickIntervalInSeconds = 1;
+//  private int clickIntervalInSeconds = 1;
   static int originalWindowProperties;
-  ArrayList<MouseEvent> mouseArray = new ArrayList<MouseEvent>();  
+//  ArrayList<MouseEvent> mouseArray = new ArrayList<MouseEvent>();  
   ArrayList<Coordinate> coordinateArray = new ArrayList<Coordinate>();
   Window w = new Window(null);  
+  private boolean flip = true;
+  Robot testRobot;
   
   public static void main(String[] args) {
     Application.launch(args);
@@ -73,10 +73,10 @@ public class TouchReplay2 extends Application {
 	  originalWindowProperties = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
   }
   
-  private static void setOriginalWindowProperties(Component w) {
-	  WinDef.HWND hwnd = getHWnd(w);
-	  User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, originalWindowProperties);
-  }
+//  private static void setOriginalWindowProperties(Component w) {
+//	  WinDef.HWND hwnd = getHWnd(w);
+//	  User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, originalWindowProperties);
+//  }
   private static void setTransparent(Component w) {
 	  WinDef.HWND hwnd = getHWnd(w);
 	  int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
@@ -89,13 +89,24 @@ public class TouchReplay2 extends Application {
 	  User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
   }
   
-  public void move(MouseEvent e) throws AWTException{	  
-	  Point p = e.getPoint();
-	  int x = e.getXOnScreen();
-	  int y = e.getYOnScreen();
-	  move(x, y);
+  public void click(Coordinate coordinate) throws AWTException, InterruptedException {
+	  click(coordinate.getX(), coordinate.getY(), coordinate.getTimeDiff());
   }
-  public void move(int x, int y) throws AWTException {
+
+  public void click(int xCoordinate, int yCoordinate, long timeDiff) throws AWTException, InterruptedException {
+	  Robot bot = new Robot();
+//	  bot.wait(timeDiff);
+//	  Thread.currentThread().sleep(timeDiff*1000);
+//	  wait(timeDiff);
+	  move(xCoordinate, yCoordinate, timeDiff);
+	  bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+	  bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+  }
+  public void move(Coordinate coordinate) throws AWTException, InterruptedException{
+	  move(coordinate.getX(), coordinate.getY(), coordinate.getTimeDifference(null));
+  }
+  
+  public void move(int x, int y, long millis) throws AWTException, InterruptedException {
 	  Robot bot = new Robot();
 	  int tries = 200;
 	  Point p = new Point(x,y);
@@ -106,34 +117,8 @@ public class TouchReplay2 extends Application {
 			  break;
 		  }
 	  }	  
-  }
-  
-  public void click(Coordinate coordinate) throws AWTException {
-	  click(coordinate.getX(), coordinate.getY());
-  }
-  
-  public void click(int xCoordinate, int yCoordinate) throws AWTException {
-	  Robot bot = new Robot();
-	  move(xCoordinate, yCoordinate);
-//	  bot.mouseMove(xCoordinate, yCoordinate);
-	  bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-	  bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-  }
-  
-  public void click(MouseEvent e) throws AWTException {
-	  Window w = (Window) e.getSource();	 
-	  System.out.println(w.getBounds().toString() + " | " + w.getX() + ":" +  w.getY());
-	  Robot bot = new Robot();
-	  bot.mouseMove(e.getXOnScreen(), e.getYOnScreen());	  
-	  try {
-		  Thread.sleep(clickIntervalInSeconds * 1000);
-	  }catch (InterruptedException e1) {
-		// TODO Auto-generated catch block
-		  e1.printStackTrace();
-	  }
-	  bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-	  bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-  }
+//	  Thread.sleep(millis);
+  }  
   
   public void release() throws AWTException{
 	  Robot bot = new Robot();
@@ -148,9 +133,39 @@ public class TouchReplay2 extends Application {
 	  hwnd.setPointer(Native.getComponentPointer(w));
 	  return hwnd;
   }
+  
+  private void cleanCoordinateArray() {
+	  removeCoordinateDuplicates();
+	  populateCoordinateTimingDiffs();
+  }
+  
+  private void removeCoordinateDuplicates() {
+	  for(int i=1; i<coordinateArray.size(); i++) {
+		  if((coordinateArray.get(i).getTimeDifference(coordinateArray.get(i-1)))<100){
+			  coordinateArray.remove(i);
+		  }
+	  }
+  }
+  
+  private void populateCoordinateTimingDiffs() {
+	  Coordinate previous;
+	  Coordinate current;
+	  long diff;
+	  coordinateArray.get(0).setTimeDiff(0);
+	  /**
+	   * Get difference, assign to current
+	   */
+	  for(int i=1; i<coordinateArray.size(); i++) {
+		  previous = coordinateArray.get(i-1);
+		  current = coordinateArray.get(i);
+		  diff = current.getTimeDifference(previous);
+		  current.setTimeDiff(diff);
+	  }
+  }
 
-@Override
+  @Override
   public void start(Stage primaryStage) {
+	  
     JPanel jpanel = new JPanel() {
         protected void paintComponent(Graphics g) {
         	//calling this method seems to allow the window to become transparent
@@ -160,84 +175,103 @@ public class TouchReplay2 extends Application {
             return new Dimension(screenWidth, screenHeight);
         }
     };   
-        
+
     MouseAdapter mouseAdapter = new MouseAdapter() { 	    	
         @Override
         public void mousePressed(MouseEvent e) {
-        	Coordinate coordinate = new Coordinate(e.getXOnScreen(), e.getYOnScreen());
-        	coordinateArray.add(coordinate);
-        	//Alt + Shift + Right Click = Replay
-        	if(e.isAltDown() && e.isShiftDown()) {				
-    			for(int i=0; i<mouseArray.size(); i=i+2) {
-    				try {
-    					setTransparent(w);
-    					move(mouseArray.get(i));
-    					click(mouseArray.get(i));
-    					setOpaque(w);
-    				} catch (AWTException e1) {
-						e1.printStackTrace();
-					}
-    			}	
-        	}
+    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        	int count = e.getClickCount();
+        	System.out.println("clickCount: " + count);
         	//Alt + Right Click = Replay with Json
-			else if(e.isAltDown()) {
+			if(e.isAltDown() && flip) {
+				flip=!flip;
 				ArrayList<Coordinate> coordinates = JSONSimpleWrapper.getCoordinates();
-				for(int i=0; i<coordinates.size(); i++) {					
+				for(int i=0; i<coordinates.size(); i=i+1) {		
+					try {
+						Thread.currentThread().sleep(coordinates.get(i).getTimeDiff()*100);
+					} catch (InterruptedException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
 					try {
 						setTransparent(w);
 						click(coordinates.get(i));
-						setOpaque(w);
-					} catch (AWTException e1) {
-						// TODO Auto-generated catch block
+						System.out.println(i);
+						release();						
+					} catch (AWTException | InterruptedException e1) {
 						e1.printStackTrace();
 					}	
 				}
+				setOpaque(w);
+				e.consume();
+			//catches duplicate
+			}else if(e.isAltDown() && !flip) {
+				flip=!flip;
 			}
     		//Shift + Right Click = Close
     		else if(e.isShiftDown()) {
-//    			System.out.println("Coordinates");
-//    			for (int i=0; i<coordinateArray.size(); i=i+2) {
-//    				coordinateArray.get(i).printCoordinate();
-//    			}    
     			coordinateArray.clear();
     			w.dispose();
     			System.exit(0);
     		//Ctrl + Right Click = Save 
     		}else if(e.isControlDown()) {
     			try {
-//					JSONWrapper.writeMouseEventsToJSON(coordinateArray);
+    				cleanCoordinateArray();
     				JSONSimpleWrapper.writeInteractionEvents(coordinateArray);			
 				} catch (Exception e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}	
-    			e.consume();
     		}		
-        	else {     
+        	else{  
         		setTransparent(w); 
     	    	try {
-    				click(e.getXOnScreen(), e.getYOnScreen());
-//    				mouseArray.add(e);
-    			} catch (AWTException e1) {
-    				// TODO Auto-generated catch block
+    	    		System.out.println("click");
+    				click(e.getXOnScreen(), e.getYOnScreen(), 0);
+    				Coordinate coordinate = new Coordinate(e.getXOnScreen(), e.getYOnScreen(), timestamp);    	        	
+    				coordinateArray.add(coordinate);
+    				for(int i=0; i<coordinateArray.size(); i++) {
+    					System.out.print(i + " ");
+    					coordinateArray.get(i).printCoordinate();
+    				}
+    			} catch (AWTException | InterruptedException e1) {
     				e1.printStackTrace();
     			}    	
     	    	setOpaque(w);
     	    	try {
 					release();
 				} catch (AWTException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
-				}
+				}    	    	
     		}
-        }
+    	}       	        
     };    
+//    KeyListener keyListener = new KeyListener() {
+//		@Override
+//		public void keyPressed(KeyEvent arg0) {
+//			// TODO Auto-generated method stub
+//			System.out.println("KeyEvent: "+arg0.getKeyChar());
+//		}
+//		@Override
+//		public void keyReleased(KeyEvent arg0) {
+//			// TODO Auto-generated method stub
+//			
+//		}
+//		@Override
+//		public void keyTyped(KeyEvent arg0) {
+//			// TODO Auto-generated method stub
+//			
+//		}
+//    };
+    
+
+    
     w.addMouseListener(mouseAdapter);
+//    w.addKeyListener(keyListener);
     w.add(jpanel);
     w.pack();
     w.setLocationRelativeTo(null);
     w.setVisible(true);
-    w.setBackground(new Color(0.5f, 0.5f, 0.5f, 0.1f));
+    w.setBackground(new Color(0.25f, 0.5f, 0.5f, 0.1f));
     w.setBounds(0,0,screenWidth, screenHeight);
     w.setAlwaysOnTop(true);    
     getOriginalWindowProperties(w);    
