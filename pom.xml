@@ -29,6 +29,14 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>system-hook-mvn-repo</id>
+            <url>https://raw.github.com/kristian/system-hook/mvn-repo/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+  </repository>
     </repositories>
   
   <dependencies>
@@ -62,6 +70,11 @@
     <version>2.8.5</version>
 </dependency>
 
+<dependency>
+  <groupId>lc.kra.system</groupId>
+  <artifactId>system-hook</artifactId>
+  <version>3.3</version>
+</dependency>
 
   </dependencies>
 </project>
