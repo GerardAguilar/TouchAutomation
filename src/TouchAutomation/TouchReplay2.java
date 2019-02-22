@@ -181,7 +181,7 @@ public class TouchReplay2 extends Application {
         	}
         	//Alt + Right Click = Replay with Json
 			else if(e.isAltDown()) {
-				ArrayList<Coordinate> coordinates = JSONSimpleWrapper.getCoordinates();
+				ArrayList<Coordinate> coordinates = JSONSimpleWrapper.getCoordinates("InteractionEvent.json");
 				for(int i=0; i<coordinates.size(); i++) {					
 					try {
 						setTransparent(w);

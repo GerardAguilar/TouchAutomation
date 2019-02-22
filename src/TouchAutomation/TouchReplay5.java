@@ -17,6 +17,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
 import java.sql.Timestamp;
 import java.sql.Time;
 import java.util.ArrayList;
@@ -48,6 +49,9 @@ import javafx.scene.input.TouchEvent;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import lc.kra.system.keyboard.GlobalKeyboardHook;
+import lc.kra.system.keyboard.event.GlobalKeyAdapter;
+import lc.kra.system.keyboard.event.GlobalKeyEvent;
 import me.coley.simplejna.hook.mouse.MouseEventReceiver;
 //from w w w .  j a  va  2s  .  c  o m
 import me.coley.simplejna.hook.mouse.MouseHookManager;
@@ -55,17 +59,18 @@ import me.coley.simplejna.hook.mouse.struct.MouseButtonType;
 
 /**
  * @author gaguilar
+ * 
  */
 
-public class TouchReplay3 extends Application {
+public class TouchReplay5 extends Application {
   private int screenWidth = 1920;
   private int screenHeight = 1080;
-//  private int clickIntervalInSeconds = 1;
   static int originalWindowProperties;
-//  ArrayList<MouseEvent> mouseArray = new ArrayList<MouseEvent>();  
   ArrayList<Coordinate> coordinateArray = new ArrayList<Coordinate>();
   Window w = new Window(null);  
   private boolean flip = true;
+  private boolean record = false;
+  private boolean skipReplay = false;
   Robot testRobot;
   
   public static void main(String[] args) {
@@ -99,9 +104,8 @@ public class TouchReplay3 extends Application {
 
   public void click(int xCoordinate, int yCoordinate, long timeDiff) throws AWTException, InterruptedException {
 	  Robot bot = new Robot();
-//	  bot.wait(timeDiff);
-	  Thread.currentThread().sleep(timeDiff);
-//	  wait(timeDiff);
+	  Thread.currentThread();
+	  Thread.sleep(timeDiff);
 	  move(xCoordinate, yCoordinate);
 	  bot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
 	  bot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
@@ -140,6 +144,10 @@ public class TouchReplay3 extends Application {
   private void cleanCoordinateArray() {
 	  removeCoordinateDuplicates();
 	  populateCoordinateTimingDiffs();
+  }
+  
+  private void emptyCoordinateArray() {
+	  coordinateArray.clear();
   }
   
   private void removeCoordinateDuplicates() {
@@ -219,66 +227,144 @@ public class TouchReplay3 extends Application {
 			//catches duplicate
 			}else if(e.isAltDown() && !flip) {
 				flip=!flip;
-			}
-    		//Shift + Right Click = Close
-    		else if(e.isShiftDown()) {
-    			coordinateArray.clear();
-    			w.dispose();
-    			System.exit(0);
-    		//Ctrl + Right Click = Save 
-    		}else if(e.isControlDown()) {
-    			try {
-    				cleanCoordinateArray();
-    				JSONSimpleWrapper.writeInteractionEvents(coordinateArray);			
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}	
-    		}		
+    		}
+//			else if(e.isControlDown()){
+//    			skipReplay = true;
+//    		}	
         	else{  
-        		setTransparent(w); 
-    	    	try {
-    	    		System.out.println("click");
-    				click(e.getXOnScreen(), e.getYOnScreen(), 0);
-    				Coordinate coordinate = new Coordinate(e.getXOnScreen(), e.getYOnScreen(), timestamp);    	        	
-    				coordinateArray.add(coordinate);
-    				for(int i=0; i<coordinateArray.size(); i++) {
-    					System.out.print(i + " ");
-    					coordinateArray.get(i).printCoordinate();
-    				}
-    			} catch (AWTException | InterruptedException e1) {
-    				e1.printStackTrace();
-    			}    	
-    	    	setOpaque(w);
-    	    	try {
-					release();
-				} catch (AWTException e1) {
-					e1.printStackTrace();
-				}    	    	
+        		if(record) {
+            		setTransparent(w); 
+        	    	try {
+        	    		System.out.println("click");
+        				click(e.getXOnScreen(), e.getYOnScreen(), 0);
+        				Coordinate coordinate = new Coordinate(e.getXOnScreen(), e.getYOnScreen(), timestamp);    	        	
+        				coordinateArray.add(coordinate);
+        				for(int i=0; i<coordinateArray.size(); i++) {
+        					System.out.print(i + " ");
+        					coordinateArray.get(i).printCoordinate();
+        				}
+        			} catch (AWTException | InterruptedException e1) {
+        				e1.printStackTrace();
+        			}    	
+        	    	setOpaque(w);
+        	    	try {
+    					release();
+    				} catch (AWTException e1) {
+    					e1.printStackTrace();
+    				}    
+        		}	    	
     		}
     	}       	        
     };    
-//    KeyListener keyListener = new KeyListener() {
-//		@Override
-//		public void keyPressed(KeyEvent arg0) {
-//			// TODO Auto-generated method stub
-//			System.out.println("KeyEvent: "+arg0.getKeyChar());
-//		}
-//		@Override
-//		public void keyReleased(KeyEvent arg0) {
-//			// TODO Auto-generated method stub
-//			
-//		}
-//		@Override
-//		public void keyTyped(KeyEvent arg0) {
-//			// TODO Auto-generated method stub
-//			
-//		}
-//    };
-    
-
+    GlobalKeyboardHook keyboardHook = new GlobalKeyboardHook(true); // use false here to switch to hook instead of raw input
+	keyboardHook.addKeyListener(new GlobalKeyAdapter() {
+		@Override public void keyPressed(GlobalKeyEvent event) {
+			
+		}
+		@Override public void keyReleased(GlobalKeyEvent event) {
+			System.out.println(event); 
+			int key = event.getVirtualKeyCode();
+			//LControl + Shift + 0 to quit
+			if(event.isControlPressed() && event.isShiftPressed()) {
+				if(key==GlobalKeyEvent.VK_0) {
+	    			coordinateArray.clear();
+	    			w.dispose();
+	    			System.exit(0);
+				}
+			}
+			//LControl + # to record
+			else if(event.isControlPressed()) {
+				switch(key) {
+				case GlobalKeyEvent.VK_0:
+					System.out.println("LCtrl + 0");
+    				saveInteraction(0);
+					break;
+				case GlobalKeyEvent.VK_1:
+					saveInteraction(1);
+					break;
+				case GlobalKeyEvent.VK_2:
+					saveInteraction(2);
+					break;
+				case GlobalKeyEvent.VK_3:
+					saveInteraction(3);
+					break;
+				case GlobalKeyEvent.VK_4:
+					saveInteraction(4);
+					break;
+				case GlobalKeyEvent.VK_5:
+					saveInteraction(5);
+					break;
+				case GlobalKeyEvent.VK_6:
+					saveInteraction(6);
+					break;
+				case GlobalKeyEvent.VK_7:
+					saveInteraction(7);
+					break;
+				case GlobalKeyEvent.VK_8:
+					saveInteraction(8);
+					break;
+				case GlobalKeyEvent.VK_9:
+					saveInteraction(9);
+					break;
+				default:
+					break;
+				}
+			//Shift + # to replay
+			}else if(event.isShiftPressed()) {
+				switch(key) {
+				case GlobalKeyEvent.VK_0:
+					System.out.println("LShift + 0");
+					replayInteraction(0);
+					break;
+				case GlobalKeyEvent.VK_1:
+					replayInteraction(1);
+					break;
+				case GlobalKeyEvent.VK_2:
+					replayInteraction(2);
+					break;
+				case GlobalKeyEvent.VK_3:
+					replayInteraction(3);
+					break;
+				case GlobalKeyEvent.VK_4:
+					replayInteraction(4);
+					break;
+				case GlobalKeyEvent.VK_5:
+					replayInteraction(5);
+					break;
+				case GlobalKeyEvent.VK_6:
+					replayInteraction(6);
+					break;
+				case GlobalKeyEvent.VK_7:
+					replayInteraction(7);
+					break;
+				case GlobalKeyEvent.VK_8:
+					replayInteraction(8);
+					break;
+				case GlobalKeyEvent.VK_9:
+					replayInteraction(9);
+					break;
+				default:
+					break;
+				}
+			}
+			//R to Toggle Recording
+			else{
+				switch(key) {				
+				case GlobalKeyEvent.VK_R:
+					record = !record;
+					break;
+//				case GlobalKeyEvent.VK_ESCAPE:
+//					System.out.println("Escape pressed");
+//					skipReplay = true;
+//					break;
+				default:		
+					break;
+				}		
+			}
+		}
+	});
     
     w.addMouseListener(mouseAdapter);
-//    w.addKeyListener(keyListener);
     w.add(jpanel);
     w.pack();
     w.setLocationRelativeTo(null);
@@ -287,5 +373,53 @@ public class TouchReplay3 extends Application {
     w.setBounds(0,0,screenWidth, screenHeight);
     w.setAlwaysOnTop(true);    
     getOriginalWindowProperties(w);    
+  }
+  
+  private void saveInteraction(int id) {
+	  	if(coordinateArray.size()>0) {
+			cleanCoordinateArray();
+			try {
+				JSONSimpleWrapper.writeInteractionEvents(coordinateArray, id);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			emptyCoordinateArray();
+	  	}else {
+	  		System.out.println("Coordinate Array is empty.");
+	  	}
+  }
+  
+  private void replayInteraction(int id) {
+	  	File tmp = new File("InteractionEvent"+id+".json");
+	  	if(tmp.exists()) {
+			ArrayList<Coordinate> coordinates = JSONSimpleWrapper.getCoordinates("InteractionEvent"+id+".json");
+			for(int i=0; i<coordinates.size(); i=i+1) {		
+				if(skipReplay){}
+				else {
+					long delay = coordinates.get(i).getTimeDiff();
+	
+					//responsible for timing
+					try {
+						Thread.currentThread();
+						Thread.sleep(delay);
+					} catch (InterruptedException e2) {
+						e2.printStackTrace();
+					}
+					
+					//responsible for actual clicking
+					try {
+						setTransparent(w);
+						click(coordinates.get(i));
+						release();						
+					} catch (AWTException | InterruptedException e1) {
+						e1.printStackTrace();
+					}	
+				}
+			}
+			setOpaque(w);
+			skipReplay = false;
+	  	}else {
+	  		System.out.println("InteractionEvent"+id+".json does not exist");
+	  	}  	
   }
 }
