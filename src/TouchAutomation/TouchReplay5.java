@@ -19,8 +19,11 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import javax.swing.JComponent;
@@ -37,6 +40,7 @@ import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.POINT;
 
+import TouchAutomation.VlcScreenRecorder;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -72,9 +76,11 @@ public class TouchReplay5 extends Application {
   private boolean record = false;
   private boolean skipReplay = false;
   Robot testRobot;
+  VlcScreenRecorder recorder;
+	
   
   public static void main(String[] args) {
-    Application.launch(args);
+	  Application.launch(args);
   }
   
   private static void getOriginalWindowProperties(Component w) {
@@ -176,6 +182,8 @@ public class TouchReplay5 extends Application {
   
   @Override
   public void start(Stage primaryStage) {
+	recorder = new VlcScreenRecorder();
+	recorder.setVideoSubdirectory("\\test");
 	  
     JPanel jpanel = new JPanel() {
         protected void paintComponent(Graphics g) {
@@ -389,15 +397,18 @@ public class TouchReplay5 extends Application {
 	  	}
   }
   
-  private void replayInteraction(int id) {
+	private void replayInteraction(int id) {
+		SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");    
+		Date resultdate = new Date(System.currentTimeMillis());
 	  	File tmp = new File("InteractionEvent"+id+".json");
-	  	if(tmp.exists()) {
+		if(tmp.exists()) {
+			startRecording("InteractionEvent"+id+"_"+ resultdate);
 			ArrayList<Coordinate> coordinates = JSONSimpleWrapper.getCoordinates("InteractionEvent"+id+".json");
 			for(int i=0; i<coordinates.size(); i=i+1) {		
 				if(skipReplay){}
 				else {
 					long delay = coordinates.get(i).getTimeDiff();
-	
+		
 					//responsible for timing
 					try {
 						Thread.currentThread();
@@ -418,8 +429,19 @@ public class TouchReplay5 extends Application {
 			}
 			setOpaque(w);
 			skipReplay = false;
-	  	}else {
-	  		System.out.println("InteractionEvent"+id+".json does not exist");
-	  	}  	
-  }
+			stopRecording();
+		}else {
+			System.out.println("InteractionEvent"+id+".json does not exist");
+		}  	
+		
+	}
+	  
+	//http://www.experimentalqa.com/2017/11/record-selenium-test-video-in-mp4.html
+	private void startRecording(String testName) {
+		recorder.startRecording(testName);
+	}
+	private void stopRecording() {
+		recorder.stopRecording();
+//		recorder.releaseRecordingResources();
+	}
 }
