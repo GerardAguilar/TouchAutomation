@@ -16,9 +16,9 @@ Instructions:
 
 Note:
 * Requires the following in the same directory as the jar file 
-** libvlc.dll
-** libvlccore.dll
-** plugins folder for vlc
+* libvlc.dll
+* libvlccore.dll
+* plugins folder for vlc
 
 Known bugs:
 * Replays aren't interruptible at the moment
