@@ -16,9 +16,10 @@ Instructions:
 
 Note:
 * Requires the following in the same directory as the jar file 
-* libvlc.dll
-* libvlccore.dll
-* plugins folder for vlc
+	- libvlc.dll
+	- libvlccore.dll
+	- plugins folder for vlc
+* Currently only covers a 1920x1080 Landscape screen.
 
 Known bugs:
 * Replays aren't interruptible at the moment
