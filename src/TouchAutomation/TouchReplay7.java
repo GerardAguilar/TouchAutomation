@@ -244,181 +244,181 @@ public class TouchReplay7 extends Application {
 			  setOpaque(w);
 			  skipReplay = false;
 			  stopRecording();
-		  }
+		 }
 	  });
 	  replayThread.start();
-}
+  	}
 	  
-//http://www.experimentalqa.com/2017/11/record-selenium-test-video-in-mp4.html
-private void startRecording(String testName) {
-	  recorder.startRecording(testName);
-}
-private void stopRecording() {
-	  recorder.stopRecording();
-//		recorder.releaseRecordingResources();
-}
+	//http://www.experimentalqa.com/2017/11/record-selenium-test-video-in-mp4.html
+	private void startRecording(String testName) {
+		  recorder.startRecording(testName);
+	}
+	private void stopRecording() {
+		  recorder.stopRecording();
+	//		recorder.releaseRecordingResources();
+	}
   
   
-  @Override
-  public void start(Stage primaryStage) {
-	recorder = new VlcScreenRecorder();
-	recorder.setVideoSubdirectory("\\test");
-	  
-    JPanel jpanel = new JPanel() {
-        protected void paintComponent(Graphics g) {
-        	//calling this method seems to allow the window to become transparent
-        	//removing it, makes the panel opaque
-        }
-        public Dimension getPreferredSize() {
-            return new Dimension(screenWidth, screenHeight);
-        }
-    };   
-
-    MouseAdapter mouseAdapter = new MouseAdapter() { 	    	
-        @Override
-        public void mousePressed(MouseEvent e) {
-    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-//    		if(record) {
-        		setTransparent(w); 
-    	    	try {
-    	    		System.out.println("click");
-    				click(e.getXOnScreen(), e.getYOnScreen(), 0);
-    				Coordinate coordinate = new Coordinate(e.getXOnScreen(), e.getYOnScreen(), timestamp);    	        	
-    				coordinateArray.add(coordinate);
-    				for(int i=0; i<coordinateArray.size(); i++) {
-    					System.out.print(i + " ");
-    					coordinateArray.get(i).printCoordinate();
-    				}
-    			} catch (AWTException | InterruptedException e1) {
-    				e1.printStackTrace();
-    			}    	
-    	    	setOpaque(w);
-    	    	try {
-					release();
-				} catch (AWTException e1) {
-					e1.printStackTrace();
-				}    
-//    		}	    		
-    	}       	        
-    };    
-    GlobalKeyboardHook keyboardHook = new GlobalKeyboardHook(true); // use false here to switch to hook instead of raw input
-	keyboardHook.addKeyListener(new GlobalKeyAdapter() {
-		@Override public void keyPressed(GlobalKeyEvent event) {
-			
-		}
-		@Override public void keyReleased(GlobalKeyEvent event) {
-			System.out.println(event); 
-			int key = event.getVirtualKeyCode();
-			//LControl + Shift + 0 to quit
-			if(event.isControlPressed() && event.isShiftPressed()) {
-				if(key==GlobalKeyEvent.VK_0) {
-	    			coordinateArray.clear();
-	    			w.dispose();
-	    			System.exit(0);
+	@Override
+	public void start(Stage primaryStage) {
+		recorder = new VlcScreenRecorder();
+		recorder.setVideoSubdirectory("\\test");
+		  
+	    JPanel jpanel = new JPanel() {
+	        protected void paintComponent(Graphics g) {
+	        	//calling this method seems to allow the window to become transparent
+	        	//removing it, makes the panel opaque
+	        }
+	        public Dimension getPreferredSize() {
+	            return new Dimension(screenWidth, screenHeight);
+	        }
+	    };   
+	
+	    MouseAdapter mouseAdapter = new MouseAdapter() { 	    	
+	        @Override
+	        public void mousePressed(MouseEvent e) {
+	    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+	//    		if(record) {
+	        		setTransparent(w); 
+	    	    	try {
+	    	    		System.out.println("click");
+	    				click(e.getXOnScreen(), e.getYOnScreen(), 0);
+	    				Coordinate coordinate = new Coordinate(e.getXOnScreen(), e.getYOnScreen(), timestamp);    	        	
+	    				coordinateArray.add(coordinate);
+	    				for(int i=0; i<coordinateArray.size(); i++) {
+	    					System.out.print(i + " ");
+	    					coordinateArray.get(i).printCoordinate();
+	    				}
+	    			} catch (AWTException | InterruptedException e1) {
+	    				e1.printStackTrace();
+	    			}    	
+	    	    	setOpaque(w);
+	    	    	try {
+						release();
+					} catch (AWTException e1) {
+						e1.printStackTrace();
+					}    
+	//    		}	    		
+	    	}       	        
+	    };    
+	    GlobalKeyboardHook keyboardHook = new GlobalKeyboardHook(true); // use false here to switch to hook instead of raw input
+		keyboardHook.addKeyListener(new GlobalKeyAdapter() {
+			@Override public void keyPressed(GlobalKeyEvent event) {
+				
+			}
+			@Override public void keyReleased(GlobalKeyEvent event) {
+				System.out.println(event); 
+				int key = event.getVirtualKeyCode();
+				//LControl + Shift + 0 to quit
+				if(event.isControlPressed() && event.isShiftPressed()) {
+					if(key==GlobalKeyEvent.VK_0) {
+		    			coordinateArray.clear();
+		    			w.dispose();
+		    			System.exit(0);
+					}
+				}
+				//LControl + # to record
+				else if(event.isControlPressed()) {
+					switch(key) {
+					case GlobalKeyEvent.VK_0:
+						System.out.println("LCtrl + 0");
+	    				saveInteraction(0);
+						break;
+					case GlobalKeyEvent.VK_1:
+						saveInteraction(1);
+						break;
+					case GlobalKeyEvent.VK_2:
+						saveInteraction(2);
+						break;
+					case GlobalKeyEvent.VK_3:
+						saveInteraction(3);
+						break;
+					case GlobalKeyEvent.VK_4:
+						saveInteraction(4);
+						break;
+					case GlobalKeyEvent.VK_5:
+						saveInteraction(5);
+						break;
+					case GlobalKeyEvent.VK_6:
+						saveInteraction(6);
+						break;
+					case GlobalKeyEvent.VK_7:
+						saveInteraction(7);
+						break;
+					case GlobalKeyEvent.VK_8:
+						saveInteraction(8);
+						break;
+					case GlobalKeyEvent.VK_9:
+						saveInteraction(9);
+						break;
+					default:
+						break;
+					}
+				//Shift + # to replay
+				}else if(event.isShiftPressed()) {
+					switch(key) {
+					case GlobalKeyEvent.VK_0:
+						System.out.println("LShift + 0");
+						replayInteraction(0);
+						break;
+					case GlobalKeyEvent.VK_1:
+						replayInteraction(1);
+						break;
+					case GlobalKeyEvent.VK_2:
+						replayInteraction(2);
+						break;
+					case GlobalKeyEvent.VK_3:
+						replayInteraction(3);
+						break;
+					case GlobalKeyEvent.VK_4:
+						replayInteraction(4);
+						break;
+					case GlobalKeyEvent.VK_5:
+						replayInteraction(5);
+						break;
+					case GlobalKeyEvent.VK_6:
+						replayInteraction(6);
+						break;
+					case GlobalKeyEvent.VK_7:
+						replayInteraction(7);
+						break;
+					case GlobalKeyEvent.VK_8:
+						replayInteraction(8);
+						break;
+					case GlobalKeyEvent.VK_9:
+						replayInteraction(9);
+						break;
+					default:
+						break;
+					}
+				}
+				//R to Toggle Recording
+				else{
+					switch(key) {				
+					case GlobalKeyEvent.VK_R:
+						w.setVisible(!w.isVisible());
+						break;
+					case GlobalKeyEvent.VK_ESCAPE:
+		    			coordinateArray.clear();
+		    			w.dispose();
+		    			System.exit(0);
+		    			break;
+					default:		
+						break;
+					}		
 				}
 			}
-			//LControl + # to record
-			else if(event.isControlPressed()) {
-				switch(key) {
-				case GlobalKeyEvent.VK_0:
-					System.out.println("LCtrl + 0");
-    				saveInteraction(0);
-					break;
-				case GlobalKeyEvent.VK_1:
-					saveInteraction(1);
-					break;
-				case GlobalKeyEvent.VK_2:
-					saveInteraction(2);
-					break;
-				case GlobalKeyEvent.VK_3:
-					saveInteraction(3);
-					break;
-				case GlobalKeyEvent.VK_4:
-					saveInteraction(4);
-					break;
-				case GlobalKeyEvent.VK_5:
-					saveInteraction(5);
-					break;
-				case GlobalKeyEvent.VK_6:
-					saveInteraction(6);
-					break;
-				case GlobalKeyEvent.VK_7:
-					saveInteraction(7);
-					break;
-				case GlobalKeyEvent.VK_8:
-					saveInteraction(8);
-					break;
-				case GlobalKeyEvent.VK_9:
-					saveInteraction(9);
-					break;
-				default:
-					break;
-				}
-			//Shift + # to replay
-			}else if(event.isShiftPressed()) {
-				switch(key) {
-				case GlobalKeyEvent.VK_0:
-					System.out.println("LShift + 0");
-					replayInteraction(0);
-					break;
-				case GlobalKeyEvent.VK_1:
-					replayInteraction(1);
-					break;
-				case GlobalKeyEvent.VK_2:
-					replayInteraction(2);
-					break;
-				case GlobalKeyEvent.VK_3:
-					replayInteraction(3);
-					break;
-				case GlobalKeyEvent.VK_4:
-					replayInteraction(4);
-					break;
-				case GlobalKeyEvent.VK_5:
-					replayInteraction(5);
-					break;
-				case GlobalKeyEvent.VK_6:
-					replayInteraction(6);
-					break;
-				case GlobalKeyEvent.VK_7:
-					replayInteraction(7);
-					break;
-				case GlobalKeyEvent.VK_8:
-					replayInteraction(8);
-					break;
-				case GlobalKeyEvent.VK_9:
-					replayInteraction(9);
-					break;
-				default:
-					break;
-				}
-			}
-			//R to Toggle Recording
-			else{
-				switch(key) {				
-				case GlobalKeyEvent.VK_R:
-					w.setVisible(!w.isVisible());
-					break;
-				case GlobalKeyEvent.VK_ESCAPE:
-	    			coordinateArray.clear();
-	    			w.dispose();
-	    			System.exit(0);
-	    			break;
-				default:		
-					break;
-				}		
-			}
-		}
-	});
-    
-    w.addMouseListener(mouseAdapter);
-    w.add(jpanel);
-    w.pack();
-    w.setLocationRelativeTo(null);
-    w.setVisible(true);
-    w.setBackground(new Color(0.25f, 0.5f, 0.5f, 0.1f));
-    w.setBounds(0,0,screenWidth, screenHeight);
-    w.setAlwaysOnTop(true);    
-    getOriginalWindowProperties(w);
+		});
+	    
+	    w.addMouseListener(mouseAdapter);
+	    w.add(jpanel);
+	    w.pack();
+	    w.setLocationRelativeTo(null);
+	    w.setVisible(true);
+	    w.setBackground(new Color(0.25f, 0.5f, 0.5f, 0.1f));
+	    w.setBounds(0,0,screenWidth, screenHeight);
+	    w.setAlwaysOnTop(true);    
+	    getOriginalWindowProperties(w);
   }
   
 

@@ -44,9 +44,30 @@ public class VlcScreenRecorder {
     private String videoSubdirectory ="";
 
     public VlcScreenRecorder() {
-        NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), System.getProperty("user.dir")+"\\lib");
-        System.out.println(System.getProperty("user.dir")+"\\lib\\plugins");
-        System.setProperty("VLC_PLUGIN_PATH",  System.getProperty("user.dir")+"\\lib\\plugins");
+//        NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), System.getProperty("user.dir")+"\\lib");//is this the line that 
+//        System.out.println(System.getProperty("user.dir")+"\\lib\\plugins");
+//        
+        String defaultPluginLocation = "C:\\Program Files\\VideoLAN\\VLC\\plugins";
+        File defaultPluginDirectory = new File(defaultPluginLocation);
+        String pluginLocation = System.getProperty("user.dir")+"\\plugins";
+        File pluginDirectory = new File(pluginLocation);
+        
+        String userDirectory = System.getProperty("user.dir");
+        System.out.println("userDirectory: " + userDirectory);
+//        NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), userDirectory);
+        NativeLibrary.addSearchPath("libvlc", userDirectory);
+        
+        System.setProperty("jna.library.path", userDirectory);
+        
+        if(defaultPluginDirectory.exists()) {
+        	System.out.println("VLC Plugins found in " + defaultPluginLocation);
+        	System.setProperty("VLC_PLUGIN_PATH", defaultPluginLocation);
+        }else if(pluginDirectory.exists()){
+        	System.out.println("VLC Plugins found in " + pluginLocation);        	
+        	System.setProperty("VLC_PLUGIN_PATH", pluginLocation);
+        }else {
+        	System.out.println("VLC Plugin Directory could not be set. Not found in:\n\t* " + defaultPluginLocation + "\n\t* " + pluginLocation);
+        }
         mediaPlayerFactory = new MediaPlayerFactory(OPTIONS);
         mediaPlayer = mediaPlayerFactory.newHeadlessMediaPlayer();
     }
