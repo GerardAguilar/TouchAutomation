@@ -17,8 +17,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.sql.Date;
@@ -27,8 +33,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.json.simple.JSONObject;
@@ -45,12 +53,16 @@ import TouchAutomation.VlcScreenRecorder;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.embed.swing.JFXPanel;
+import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 //import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TouchEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -79,8 +91,8 @@ public class TouchReplay7 extends Application {
   static int originalWindowProperties;
   ArrayList<Coordinate> coordinateArray = new ArrayList<Coordinate>();
   Window w = new Window(null);  
-  private boolean flip = true;
-  private boolean record = false;
+//  private boolean flip = true;
+//  private boolean record = false;
   private boolean skipReplay = false;
   Robot testRobot;
   VlcScreenRecorder recorder;
@@ -273,6 +285,31 @@ public class TouchReplay7 extends Application {
 	            return new Dimension(screenWidth, screenHeight);
 	        }
 	    };   
+	    
+	    URL fileLocation = getClass().getResource("/1920x1080.png");
+	    System.out.println("file: " + fileLocation.getFile());
+	    System.out.println("path: " + fileLocation.getPath());
+	    
+	    Pane pane = new Pane();
+	    
+	    InputStream is;
+		try {
+			is = new BufferedInputStream(new FileInputStream(fileLocation.getFile()));
+		    Image touchImage = new Image(is);
+		    TouchImage touchArea = new TouchImage(0,0,touchImage);
+		    pane.getChildren().addAll(touchArea);
+
+		} catch (FileNotFoundException e2) {
+			e2.printStackTrace();
+		}
+		
+		
+		SwingNode swingNode = new SwingNode();
+
+		/**
+		 * What I need to do is add a JavaFX node to w
+		 * But w only accepts JComponents
+		 */
 	
 	    MouseAdapter mouseAdapter = new MouseAdapter() { 	    	
 	        @Override
