@@ -1,8 +1,10 @@
 package TouchAutomation;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 
 import java.awt.AWTException;
 import java.awt.BorderLayout;
-import java.awt.Color;
+//import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -53,18 +55,26 @@ import TouchAutomation.VlcScreenRecorder;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.JFXPanel;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 //import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TouchEvent;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import lc.kra.system.keyboard.GlobalKeyboardHook;
 import lc.kra.system.keyboard.event.GlobalKeyAdapter;
@@ -82,15 +92,15 @@ import java.util.concurrent.Future;
 
 /**
  * @author gaguilar
- * 
+ * Instead of relying on java.awt.Window for transparency and click-throughs I can make all of it JavaFX
  */
 
-public class TouchReplay7 extends Application {
+public class TouchReplay8 extends Application {
   private int screenWidth = 1920;
   private int screenHeight = 1080;
   static int originalWindowProperties;
   ArrayList<Coordinate> coordinateArray = new ArrayList<Coordinate>();
-  Window w = new Window(null);  
+//  Window w = new Window(null);  
 //  private boolean flip = true;
 //  private boolean record = false;
   private boolean skipReplay = false;
@@ -101,26 +111,22 @@ public class TouchReplay7 extends Application {
 	  Application.launch(args);
   }
   
-  private static void getOriginalWindowProperties(Component w) {
-	  WinDef.HWND hwnd = getHWnd(w);
-	  originalWindowProperties = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
-  }
-  
-//  private static void setOriginalWindowProperties(Component w) {
+//  private static void getOriginalWindowProperties(Component w) {
 //	  WinDef.HWND hwnd = getHWnd(w);
-//	  User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, originalWindowProperties);
+//	  originalWindowProperties = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
 //  }
-  private static void setTransparent(Component w) {
-	  WinDef.HWND hwnd = getHWnd(w);
-	  int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
-	  wl = wl | WinUser.WS_EX_LAYERED | WinUser.WS_EX_TRANSPARENT;
-	  User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
-  }
-  private static void setOpaque(Component w) {
-	  WinDef.HWND hwnd = getHWnd(w);
-	  int wl = originalWindowProperties;
-	  User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
-  }
+//  
+//  private static void setTransparent(Component w) {
+//	  WinDef.HWND hwnd = getHWnd(w);
+//	  int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
+//	  wl = wl | WinUser.WS_EX_LAYERED | WinUser.WS_EX_TRANSPARENT;
+//	  User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
+//  }
+//  private static void setOpaque(Component w) {
+//	  WinDef.HWND hwnd = getHWnd(w);
+//	  int wl = originalWindowProperties;
+//	  User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
+//  }
   
   public void click(Coordinate coordinate) throws AWTException, InterruptedException {
 	  click(coordinate.getX(), coordinate.getY(), coordinate.getTimeDiff());
@@ -211,11 +217,12 @@ public class TouchReplay7 extends Application {
 	  }
   }
 
-  private void replayInteraction(int id) {
+  private void replayInteraction(int id, Stage primaryStage) {
 	  Thread replayThread = new Thread(new Runnable() {
 		  @Override
 		  public void run() {
-			  w.setVisible(false);
+//			  w.setVisible(false);
+			  primaryStage.hide();
 			  Date resultdate = new Date(System.currentTimeMillis());
 			  String videoName = "InteractionEvent"+id+"_"+ resultdate + "_" + System.currentTimeMillis();
 			  File tmp = new File(videoName);
@@ -245,7 +252,8 @@ public class TouchReplay7 extends Application {
 					  }
 					  //responsible for actual clicking
 					  try {
-						  setTransparent(w);
+//						  setTransparent(w);
+						  primaryStage.hide();
 						  click(coordinates.get(i));
 						  release();						
 					  } catch (AWTException | InterruptedException e1) {
@@ -253,7 +261,8 @@ public class TouchReplay7 extends Application {
 					  }
 				  }
 			  }
-			  setOpaque(w);
+//			  setOpaque(w);
+			  primaryStage.show();
 			  skipReplay = false;
 			  stopRecording();
 		 }
@@ -275,78 +284,48 @@ public class TouchReplay7 extends Application {
 	public void start(Stage primaryStage) {
 		recorder = new VlcScreenRecorder();
 		recorder.setVideoSubdirectory("\\test");
-		  
-	    JPanel jpanel = new JPanel() {
-	        protected void paintComponent(Graphics g) {
-	        	//calling this method seems to allow the window to become transparent
-	        	//removing it, makes the panel opaque
-	        }
-	        public Dimension getPreferredSize() {
-	            return new Dimension(screenWidth, screenHeight);
-	        }
-	    };   
-	    
-	    URL fileLocation = getClass().getResource("/1920x1080.png");
-	    System.out.println("file: " + fileLocation.getFile());
-	    System.out.println("path: " + fileLocation.getPath());
-	    
-	    Pane pane = new Pane();
-	    
-	    InputStream is;
-		try {
-			is = new BufferedInputStream(new FileInputStream(fileLocation.getFile()));
-		    Image touchImage = new Image(is);
-		    TouchImage touchArea = new TouchImage(0,0,touchImage);
-		    pane.getChildren().addAll(touchArea);
-
-		} catch (FileNotFoundException e2) {
-			e2.printStackTrace();
-		}
+		
+		Pane root = new Pane();
+		
+		//Creating a line object 
+		Line line = new Line(); 
+         
+		//Setting the properties to a line 
+		line.setStartX(100.0); 
+		line.setStartY(150.0); 
+		line.setEndX(500.0); 
+		line.setEndY(150.0); 
+		
+		Rectangle rect = new Rectangle();
+		rect.setHeight(1080);
+		rect.setWidth(1920);
+		rect.setStroke(Color.TRANSPARENT);
+		rect.setFill(Color.TRANSPARENT);
+		rect.setOnTouchPressed(new EventHandler<TouchEvent>() {
+			@Override public void handle(TouchEvent event) {
+				System.out.println("Touch Event: " + event.toString());
+			}
+		});
+		
+		Node n;
 		
 		
-		SwingNode swingNode = new SwingNode();
-
-		/**
-		 * What I need to do is add a JavaFX node (responsible for touches) to Window w
-		 * But w only accepts JComponents
-		 * Can I add touchlisteners to JComponents?
-		 */
+		ObservableList list = root.getChildren();
+		list.add(rect);
 		
-		/**
-		 * My other option is to do the entire thing in JavaFX
-		 */
-		
-		/**
-		 * Another option is working with MT4J framework
-		 */
 	
-	    MouseAdapter mouseAdapter = new MouseAdapter() { 	    	
-	        @Override
-	        public void mousePressed(MouseEvent e) {
-	    		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-	//    		if(record) {
-	        		setTransparent(w); 
-	    	    	try {
-	    	    		System.out.println("click");
-	    				click(e.getXOnScreen(), e.getYOnScreen(), 0);
-	    				Coordinate coordinate = new Coordinate(e.getXOnScreen(), e.getYOnScreen(), timestamp);    	        	
-	    				coordinateArray.add(coordinate);
-	    				for(int i=0; i<coordinateArray.size(); i++) {
-	    					System.out.print(i + " ");
-	    					coordinateArray.get(i).printCoordinate();
-	    				}
-	    			} catch (AWTException | InterruptedException e1) {
-	    				e1.printStackTrace();
-	    			}    	
-	    	    	setOpaque(w);
-	    	    	try {
-						release();
-					} catch (AWTException e1) {
-						e1.printStackTrace();
-					}    
-	//    		}	    		
-	    	}       	        
-	    };    
+		
+		Scene scene = new Scene(root, 1920, 1080);
+//		scene.setFill(Color.TRANSPARENT);
+		
+		Color color = new Color(0,0,0,0.1f);
+		scene.setFill(color);
+		primaryStage.setScene(scene);
+		
+		primaryStage.initStyle(StageStyle.TRANSPARENT);
+		
+		primaryStage.show();		
+	    
 	    GlobalKeyboardHook keyboardHook = new GlobalKeyboardHook(true); // use false here to switch to hook instead of raw input
 		keyboardHook.addKeyListener(new GlobalKeyAdapter() {
 			@Override public void keyPressed(GlobalKeyEvent event) {
@@ -359,7 +338,7 @@ public class TouchReplay7 extends Application {
 				if(event.isControlPressed() && event.isShiftPressed()) {
 					if(key==GlobalKeyEvent.VK_0) {
 		    			coordinateArray.clear();
-		    			w.dispose();
+		    			Platform.exit();
 		    			System.exit(0);
 					}
 				}
@@ -405,34 +384,34 @@ public class TouchReplay7 extends Application {
 					switch(key) {
 					case GlobalKeyEvent.VK_0:
 						System.out.println("LShift + 0");
-						replayInteraction(0);
+						replayInteraction(0, primaryStage);
 						break;
 					case GlobalKeyEvent.VK_1:
-						replayInteraction(1);
+						replayInteraction(1, primaryStage);
 						break;
 					case GlobalKeyEvent.VK_2:
-						replayInteraction(2);
+						replayInteraction(2, primaryStage);
 						break;
 					case GlobalKeyEvent.VK_3:
-						replayInteraction(3);
+						replayInteraction(3, primaryStage);
 						break;
 					case GlobalKeyEvent.VK_4:
-						replayInteraction(4);
+						replayInteraction(4, primaryStage);
 						break;
 					case GlobalKeyEvent.VK_5:
-						replayInteraction(5);
+						replayInteraction(5, primaryStage);
 						break;
 					case GlobalKeyEvent.VK_6:
-						replayInteraction(6);
+						replayInteraction(6, primaryStage);
 						break;
 					case GlobalKeyEvent.VK_7:
-						replayInteraction(7);
+						replayInteraction(7, primaryStage);
 						break;
 					case GlobalKeyEvent.VK_8:
-						replayInteraction(8);
+						replayInteraction(8, primaryStage);
 						break;
 					case GlobalKeyEvent.VK_9:
-						replayInteraction(9);
+						replayInteraction(9, primaryStage);
 						break;
 					default:
 						break;
@@ -442,11 +421,17 @@ public class TouchReplay7 extends Application {
 				else{
 					switch(key) {				
 					case GlobalKeyEvent.VK_R:
-						w.setVisible(!w.isVisible());
+//						w.setVisible(!w.isVisible());
+						if(primaryStage.isShowing()) {
+							primaryStage.hide();
+						}else {
+							primaryStage.show();
+						}
 						break;
 					case GlobalKeyEvent.VK_ESCAPE:
 		    			coordinateArray.clear();
-		    			w.dispose();
+//		    			w.dispose();
+		    			Platform.exit();
 		    			System.exit(0);
 		    			break;
 					default:		
@@ -455,16 +440,8 @@ public class TouchReplay7 extends Application {
 				}
 			}
 		});
-	    
-	    w.addMouseListener(mouseAdapter);
-	    w.add(jpanel);
-	    w.pack();
-	    w.setLocationRelativeTo(null);
-	    w.setVisible(true);
-	    w.setBackground(new Color(0.25f, 0.5f, 0.5f, 0.1f));
-	    w.setBounds(0,0,screenWidth, screenHeight);
-	    w.setAlwaysOnTop(true);    
-	    getOriginalWindowProperties(w);
+	   
+//	    getOriginalWindowProperties(w);
   }
   
 
