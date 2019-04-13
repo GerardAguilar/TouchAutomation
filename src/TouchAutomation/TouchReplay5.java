@@ -396,8 +396,7 @@ public class TouchReplay5 extends Application {
 	  		System.out.println("Coordinate Array is empty.");
 	  	}
   }
-  
-	private void replayInteraction(int id) {
+  private void replayInteraction(int id) {
 		SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm");    
 		Date resultdate = new Date(System.currentTimeMillis());
 	  	File tmp = new File("InteractionEvent"+id+".json");

@@ -16,7 +16,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+//import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
@@ -42,6 +42,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.json.simple.JSONObject;
+import org.w3c.dom.events.EventTarget;
 
 import com.sun.awt.AWTUtilities;
 import com.sun.jna.Native;
@@ -60,14 +61,19 @@ import javafx.collections.ObservableList;
 import javafx.embed.swing.JFXPanel;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
+//import javafx.event.EventTarget;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 //import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TouchEvent;
+import javafx.scene.input.TouchPoint;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
@@ -80,10 +86,8 @@ import lc.kra.system.keyboard.GlobalKeyboardHook;
 import lc.kra.system.keyboard.event.GlobalKeyAdapter;
 import lc.kra.system.keyboard.event.GlobalKeyEvent;
 import me.coley.simplejna.hook.mouse.MouseEventReceiver;
-//from w w w .  j a  va  2s  .  c  o m
 import me.coley.simplejna.hook.mouse.MouseHookManager;
 import me.coley.simplejna.hook.mouse.struct.MouseButtonType;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -95,7 +99,7 @@ import java.util.concurrent.Future;
  * Instead of relying on java.awt.Window for transparency and click-throughs I can make all of it JavaFX
  */
 
-public class TouchReplay8 extends Application {
+public class TouchReplay8NotWork extends Application {
   private int screenWidth = 1920;
   private int screenHeight = 1080;
   static int originalWindowProperties;
@@ -106,6 +110,7 @@ public class TouchReplay8 extends Application {
   private boolean skipReplay = false;
   Robot testRobot;
   VlcScreenRecorder recorder;
+  boolean flip;
 
   public static void main(String[] args) {
 	  Application.launch(args);
@@ -287,6 +292,7 @@ public class TouchReplay8 extends Application {
 		
 		Pane root = new Pane();
 		
+		
 		//Creating a line object 
 		Line line = new Line(); 
          
@@ -301,21 +307,125 @@ public class TouchReplay8 extends Application {
 		rect.setWidth(1920);
 		rect.setStroke(Color.TRANSPARENT);
 		rect.setFill(Color.TRANSPARENT);
-		rect.setOnTouchPressed(new EventHandler<TouchEvent>() {
-			@Override public void handle(TouchEvent event) {
-				System.out.println("Touch Event: " + event.toString());
+//		rect.setOnTouchPressed(new EventHandler<TouchEvent>() {
+//			@Override public void handle(TouchEvent event) {
+//				System.out.println("Touch Event: " + event.toString());
+//			}
+//		});
+		
+//		try {
+//			Robot robot2 = new Robot();
+//			
+//		} catch (AWTException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+		/**
+		 * Robot doesn't have touch support
+		 * Is there another way to echo our touch input?
+		 */
+		
+//		root.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
+//		    mouseEvent.consume();
+//		    Event touchEvent = new TouchEvent(null, null, null, screenHeight, false, false, false, false);
+//		    root.fireEvent(touchEvent);
+//		});
+		
+//		root.setOnTouchPressed(new EventHandler<TouchEvent>() {
+//			@Override public void handle(TouchEvent event) {
+//				System.out.println("Touch Event: " + event.toString());
+//				
+//				if(!flip) {
+//					flip = !flip;
+//					primaryStage.hide();
+//					root.fireEvent(event);
+//					System.out.println("Touch");
+//					primaryStage.show();					
+//				}else {//absorbs the duplicate
+//					flip = !flip;
+//				}			
+//			}
+//		});
+		
+		/**
+		 * Since I don't have a touchscreen, I can try artificially creating a TouchEvent using the MouseEvent
+		 * The problem is that this technique would be of specialized use, and I'm trying to create a generalized way to interact with touchscreens
+		 */
+		
+//		Scene scene = new Scene(root, 1920, 1080);
+		
+		flip = false;
+		root.setOnMousePressed(new EventHandler<MouseEvent>() {
+			@Override 
+			public void handle(MouseEvent event) {
+				System.out.println("Mouse Event: " + event.toString());
+//				if(!flip) {
+					flip = !flip;
+					primaryStage.hide();
+					TouchPoint touchPoint = new TouchPoint(0, TouchPoint.State.PRESSED, event.getX(), event.getY(), screenWidth, screenHeight, rect, null);
+					ArrayList<TouchPoint> touchList = new ArrayList<TouchPoint>();
+					touchList.add(touchPoint);					
+				    Event touchEvent = new TouchEvent(TouchEvent.TOUCH_PRESSED, touchPoint, touchList, 0, false, false, false, false);
+				    System.out.println("Touch Event: " + touchEvent.toString());
+					root.fireEvent(touchEvent);
+					TouchPoint releasePoint = new TouchPoint(0, TouchPoint.State.RELEASED, event.getX(), event.getY(), screenWidth, screenHeight, rect, null);	
+					ArrayList<TouchPoint> releaseList = new ArrayList<TouchPoint>();					
+					releaseList.add(releasePoint);
+					Event releaseEvent = new TouchEvent(TouchEvent.TOUCH_RELEASED, releasePoint, releaseList, 0, false, false, false, false);
+					System.out.println("Release Event: " + releaseEvent.toString());
+					root.fireEvent(releaseEvent);
+					
+					primaryStage.show();
+//				}else {//absorbs the duplicate
+//					flip = !flip;
+//				}	
+			}
+		});	
+		
+		root.setOnTouchPressed(new EventHandler<TouchEvent>() {
+			@Override
+			public void handle(TouchEvent event) {
+				System.out.println("Touch Pressed");
 			}
 		});
 		
-		Node n;
+		root.setOnTouchReleased(new EventHandler<TouchEvent>() {
+			@Override
+			public void handle(TouchEvent event) {
+				System.out.println("Touch Released");
+			}
+		});
 		
+//		flip = false;
+//		root.setOnTouchPressed(new EventHandler<TouchEvent>() {
+//			@Override
+//			public void handle(TouchEvent event) {
+//				if(!flip) {
+//					flip = !flip;
+//					primaryStage.hide();
+//					TouchPoint touchPoint = new TouchPoint(0, TouchPoint.State.PRESSED, event.getTouchPoint().getX(), event.getTouchPoint().getY(), screenWidth, screenHeight, rect, null);		
+//					TouchPoint releasePoint = new TouchPoint(0, TouchPoint.State.RELEASED, event.getTouchPoint().getX(), event.getTouchPoint().getY(), screenWidth, screenHeight, rect, null);		 
+//					ArrayList<TouchPoint> touchList = new ArrayList<TouchPoint>();
+//					touchList.add(touchPoint);
+//					touchList.add(releasePoint);
+//				    Event touchEvent = new TouchEvent(TouchEvent.TOUCH_PRESSED, touchPoint, touchList, 0, false, false, false, true);
+//				    System.out.println("Touch Event: " + touchEvent.toString());
+//					root.fireEvent(touchEvent);
+//					primaryStage.show();
+//				}else {//absorbs the duplicate
+//					flip = !flip;
+//				}
+//			}			
+//		});
 		
-		ObservableList list = root.getChildren();
-		list.add(rect);
+		//TODO: The window was placed on focus, but then the succeeding presses don't register.
 		
+		ObservableList<Node> list = root.getChildren();
+		list.add(rect);	
 	
-		
 		Scene scene = new Scene(root, 1920, 1080);
+		System.out.println("Scene: " + scene.toString());
 //		scene.setFill(Color.TRANSPARENT);
 		
 		Color color = new Color(0,0,0,0.1f);
@@ -347,34 +457,34 @@ public class TouchReplay8 extends Application {
 					switch(key) {
 					case GlobalKeyEvent.VK_0:
 						System.out.println("LCtrl + 0");
-	    				saveInteraction(0);
+						Platform.runLater(() -> saveInteraction(0));
 						break;
 					case GlobalKeyEvent.VK_1:
-						saveInteraction(1);
+						Platform.runLater(() -> saveInteraction(1));
 						break;
 					case GlobalKeyEvent.VK_2:
-						saveInteraction(2);
+						Platform.runLater(() -> saveInteraction(2));
 						break;
 					case GlobalKeyEvent.VK_3:
-						saveInteraction(3);
+						Platform.runLater(() -> saveInteraction(3));
 						break;
 					case GlobalKeyEvent.VK_4:
-						saveInteraction(4);
+						Platform.runLater(() -> saveInteraction(4));
 						break;
 					case GlobalKeyEvent.VK_5:
-						saveInteraction(5);
+						Platform.runLater(() -> saveInteraction(5));
 						break;
 					case GlobalKeyEvent.VK_6:
-						saveInteraction(6);
+						Platform.runLater(() -> saveInteraction(6));
 						break;
 					case GlobalKeyEvent.VK_7:
-						saveInteraction(7);
+						Platform.runLater(() -> saveInteraction(7));
 						break;
 					case GlobalKeyEvent.VK_8:
-						saveInteraction(8);
+						Platform.runLater(() -> saveInteraction(8));
 						break;
 					case GlobalKeyEvent.VK_9:
-						saveInteraction(9);
+						Platform.runLater(() -> saveInteraction(9));
 						break;
 					default:
 						break;
@@ -384,34 +494,34 @@ public class TouchReplay8 extends Application {
 					switch(key) {
 					case GlobalKeyEvent.VK_0:
 						System.out.println("LShift + 0");
-						replayInteraction(0, primaryStage);
+						Platform.runLater(() -> replayInteraction(0, primaryStage));
 						break;
 					case GlobalKeyEvent.VK_1:
-						replayInteraction(1, primaryStage);
+						Platform.runLater(() -> replayInteraction(1, primaryStage));
 						break;
 					case GlobalKeyEvent.VK_2:
-						replayInteraction(2, primaryStage);
+						Platform.runLater(() -> replayInteraction(2, primaryStage));
 						break;
 					case GlobalKeyEvent.VK_3:
-						replayInteraction(3, primaryStage);
+						Platform.runLater(() -> replayInteraction(3, primaryStage));
 						break;
 					case GlobalKeyEvent.VK_4:
-						replayInteraction(4, primaryStage);
+						Platform.runLater(() -> replayInteraction(4, primaryStage));
 						break;
 					case GlobalKeyEvent.VK_5:
-						replayInteraction(5, primaryStage);
+						Platform.runLater(() -> replayInteraction(5, primaryStage));
 						break;
 					case GlobalKeyEvent.VK_6:
-						replayInteraction(6, primaryStage);
+						Platform.runLater(() -> replayInteraction(6, primaryStage));
 						break;
 					case GlobalKeyEvent.VK_7:
-						replayInteraction(7, primaryStage);
+						Platform.runLater(() -> replayInteraction(7, primaryStage));
 						break;
 					case GlobalKeyEvent.VK_8:
-						replayInteraction(8, primaryStage);
+						Platform.runLater(() -> replayInteraction(8, primaryStage));
 						break;
 					case GlobalKeyEvent.VK_9:
-						replayInteraction(9, primaryStage);
+						Platform.runLater(() -> replayInteraction(9, primaryStage));
 						break;
 					default:
 						break;
@@ -422,10 +532,19 @@ public class TouchReplay8 extends Application {
 					switch(key) {				
 					case GlobalKeyEvent.VK_R:
 //						w.setVisible(!w.isVisible());
-						if(primaryStage.isShowing()) {
-							primaryStage.hide();
-						}else {
-							primaryStage.show();
+						if(primaryStage.isShowing()) {				
+							System.out.println("Turning primaryStage off");
+							Platform.runLater(() -> primaryStage.hide());							
+						}else if(!primaryStage.isShowing()) {//Switching the primary stage back on is still not working
+							Platform.runLater(() -> primaryStage.setScene(scene));					
+							Platform.runLater(() -> primaryStage.initStyle(StageStyle.TRANSPARENT));
+							Platform.runLater(() -> primaryStage.show());
+							System.out.println("Turning primaryStage back on");
+							if(primaryStage.isShowing()) {
+								System.out.println("Primary Stage should now be showing");
+							}
+							System.out.println(primaryStage.getScene().toString());
+//							Platform.runLater(() -> System.out.println(primaryStage.getScene().toString()));
 						}
 						break;
 					case GlobalKeyEvent.VK_ESCAPE:
@@ -442,6 +561,7 @@ public class TouchReplay8 extends Application {
 		});
 	   
 //	    getOriginalWindowProperties(w);
+		primaryStage.setAlwaysOnTop(true);
   }
   
 
