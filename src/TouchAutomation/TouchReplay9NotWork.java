@@ -306,41 +306,16 @@ public class TouchReplay9NotWork extends Application {
 		 * Since I don't have a touchscreen, I can try artificially creating a TouchEvent using the MouseEvent
 		 * The problem is that this technique would be of specialized use, and I'm trying to create a generalized way to interact with touchscreens
 		 */
-		
-		root.setOnMousePressed(new EventHandler<MouseEvent>() {
-			@Override 
-			public void handle(MouseEvent event) {
-				System.out.println("Mouse Event source: " + event.getSource());
-			}
-		});	
 			
 		root.setOnTouchPressed(new EventHandler<TouchEvent>() {
 			@Override
-			public void handle(TouchEvent e) {
-				
+			public void handle(TouchEvent e) {	
 				if(flip) {
 					flip=!flip;
 					Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 					System.out.println("Recording touch pressed event");
-					//fire event again
-					//catch duplicate
-					//record location
 	        		setTransparent(handle); 
-//	    	    	try {
-	    	    		System.out.println("click");
-//	    				click(e.getXOnScreen(), e.getYOnScreen(), 0);
-	    	    		root.fireEvent(e);
-	    	    		System.out.println(e.isConsumed());
-//	    				Coordinate coordinate = new Coordinate(e.getTouchPoint().getSceneX(), e.getTouchPoint().getSceneY(), timestamp);    	        	
-//	    				coordinateArray.add(coordinate);
-//	    				for(int i=0; i<coordinateArray.size(); i++) {
-//	    					System.out.print(i + " ");
-//	    					coordinateArray.get(i).printCoordinate();
-//	    				}
-//	    			} catch (AWTException | InterruptedException e1) {
-//	    				e1.printStackTrace();
-//	    			}    	
-	    	    	setOpaque(handle);
+	    	    //catches duplicate
 				}else if(!flip) {
 					System.out.println("flip");
 					flip=!flip;
